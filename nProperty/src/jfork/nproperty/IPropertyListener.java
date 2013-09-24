@@ -25,7 +25,7 @@ package jfork.nproperty;
  * Properties event listener. Target class should implement this interface to be available to listen nProperty events.
  * In other cases events will not be called.
  *
- * @author Yorie
+ * @author Nikita Sankov
  */
 public interface IPropertyListener
 {

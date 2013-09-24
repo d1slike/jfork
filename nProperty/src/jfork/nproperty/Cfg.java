@@ -66,7 +66,7 @@ import java.lang.annotation.Target;
  *</pre>
  * You can override split token and field name.
  *
- * @author Yorie
+ * @author Nikita Sankov
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE})
