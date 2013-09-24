@@ -1,0 +1,1 @@
+You can find full nProperty documentation at http://microfork.com/reading-configuration-files-with-java-nproperty/
