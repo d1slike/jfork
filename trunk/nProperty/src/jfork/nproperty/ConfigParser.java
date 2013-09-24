@@ -44,7 +44,7 @@ import java.util.*;
  *     }
  * }</pre>
  *
- * @author Yorie
+ * @author Nikita Sankov
  */
 public class ConfigParser
 {
