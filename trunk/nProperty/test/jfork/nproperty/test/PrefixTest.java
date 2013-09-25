@@ -19,10 +19,13 @@
  * under the License.
  */
 
-package jfork.nproperty.samples;
+package jfork.nproperty.test;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
+import org.hamcrest.core.Is;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,24 +33,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 
-/**
- * Example of usage java.io.File and java.io.InputStream with nProperty.
- * You should set working directory to "{your_source_root}samples/" for proper read of configuration file "example.ini".
- *
- * @author Nikita Sankov
- */
-@Cfg
-public class Example14
+@Cfg(prefix = "db.")
+public class PrefixTest
 {
-	public int SOME_INT_VALUE;
-	public int SOME_MISSED_VALUE;
-	public int SOME_INT_ARRAY;
+	private static String user;
+	private static String pswd;
+	private static String host;
+	private static int port;
 
-	public static void main(String[] args) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	@Test
+	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(new Example14(), "config/example.ini");
-		ConfigParser.parse(new Example14(), new File("config", "example.ini"));
-		ConfigParser.parse(new Example14(), new FileInputStream("config/example.ini"), "config/example.ini");
-		ConfigParser.parse(new Example14(), new InputStreamReader(new FileInputStream(new File("config/example.ini")), "utf-8"), "config/example.ini");
+		ConfigParser.parse(PrefixTest.class, "config/base.ini");
+		Assert.assertThat(user, Is.is("user"));
+		Assert.assertThat(pswd, Is.is("pswd"));
+		Assert.assertThat(host, Is.is("127.0.0.1"));
+		Assert.assertThat(port, Is.is(90));
 	}
 }
