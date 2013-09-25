@@ -86,4 +86,17 @@ public @interface Cfg
 	 * Should be set up to true if you with to ignore some field of class.
 	 */
 	boolean ignore() default false;
+
+	/**
+	 * Prefix of property name can be used for batch loading of property sets with prefixes
+	 * For example, let properties be: db.name, db.user, db.password
+	 * then we can load them by annotating class by {@link Cfg} annotation:
+	 * <pre>{@literal @}Cfg(prefix = "db.")
+	 * class MyDatabaseConfig
+	 * {
+	 *     // ...
+	 * }
+	 * </pre>
+	 */
+	String prefix() default "";
 }

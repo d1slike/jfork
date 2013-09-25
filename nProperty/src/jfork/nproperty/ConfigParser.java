@@ -77,7 +77,7 @@ public class ConfigParser
 	 */
 	public static Properties parse(Object object, File file) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException
 	{
-		return parse0(object, new FileInputStream(file), file.getPath());
+		return parse(object, new FileInputStream(file), file.getPath());
 	}
 
 	/**
@@ -94,7 +94,30 @@ public class ConfigParser
 	 */
 	public static Properties parse(Object object, InputStream stream, String streamName) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException
 	{
-		return parse0(object, stream, streamName);
+		Properties props = new Properties();
+		props.load(stream);
+
+		return parse0(object, props, streamName);
+	}
+
+	/**
+	 * Parses property set with using of NProperty annotations and using abstract input io stream reader (it can be a file, network or any other thing Java can provide within io streams).
+	 *
+	 * @param object NProperty annotated object, that represents Java property storage.
+	 * @param reader IO stream reader.
+	 * @param streamName Name of stream (this will be used instead of file name, because of using IO stream we cannot retrieve file name).
+	 * @throws InvocationTargetException Failed invoke some annotated method.
+	 * @throws NoSuchMethodException Appears on adding splitter properties to lists.
+	 * @throws InstantiationException When failed to create instance of an custom object. Such exception can appered when property field is of custom type.
+	 * @throws IllegalAccessException If NProperty tries access inaccessible entities in annotated object.
+	 * @throws IOException If configuration file does not exists or due to system IO errors.
+	 */
+	public static Properties parse(Object object, Reader reader, String streamName) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException
+	{
+		Properties props = new Properties();
+		props.load(reader);
+
+		return parse0(object, props, streamName);
 	}
 
 	/**
@@ -109,19 +132,30 @@ public class ConfigParser
 	 * @throws InvocationTargetException Failed invoke some annotated method.
 	 */
 	@SuppressWarnings("unchecked")
-	private static Properties parse0(Object object, InputStream stream, String path) throws IOException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
+	private static Properties parse0(Object object, Properties props, String path) throws IOException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
 	{
 		boolean callEvents = object instanceof IPropertyListener;
 
 		if (callEvents)
 			((IPropertyListener)object).onStart(path);
 
-		Properties props = new Properties();
-		props.load(stream);
-
 		boolean isClass = (object instanceof Class);
-		boolean classAnnotationPresent = (isClass)
-				? (((Class)object).isAnnotationPresent(Cfg.class)) : (object.getClass().isAnnotationPresent(Cfg.class));
+		boolean classAnnotationPresent;
+		String prefix = null;
+		if (isClass)
+		{
+			classAnnotationPresent = ((Class)object).isAnnotationPresent(Cfg.class);
+
+			if (classAnnotationPresent)
+				prefix = ((Cfg)((Class)object).getAnnotation(Cfg.class)).prefix();
+		}
+		else
+		{
+			classAnnotationPresent = object.getClass().isAnnotationPresent(Cfg.class);
+
+			if (classAnnotationPresent)
+				prefix = object.getClass().getAnnotation(Cfg.class).prefix();
+		}
 
 		Field[] fields = (object instanceof Class) ? ((Class) object).getDeclaredFields() : object.getClass().getDeclaredFields();
 		for (Field field : fields)
@@ -143,8 +177,13 @@ public class ConfigParser
 			else
 				continue;
 
+			// If name is empty, we should try to take field name as property name
 			if (name.length() <= 0)
 				name = field.getName();
+
+			// Adding prefix if needed
+			if (prefix != null && !prefix.isEmpty())
+				name = prefix.concat(name);
 
 			boolean oldAccess = field.isAccessible();
 			field.setAccessible(true);
