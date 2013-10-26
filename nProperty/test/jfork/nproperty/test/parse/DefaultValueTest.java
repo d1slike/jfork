@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -30,32 +30,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public class CustomFieldClassTest
+@Cfg
+public class DefaultValueTest
 {
-	private static class MyFieldClass
-	{
-		private int value;
-
-		public MyFieldClass(String value)
-		{
-			this.value = Integer.valueOf(value);
-		}
-
-		public int getValue()
-		{
-			return value;
-		}
-	}
-
-	@Cfg
-	private static MyFieldClass CUSTOM_CLASS_FIELD;
+	private static int DEFAULT_VALUE = 9999;
 
 	@Test
 	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(CustomFieldClassTest.class, "config/base.ini");
-
-		Assert.assertThat(CUSTOM_CLASS_FIELD != null, Is.is(true));
-		Assert.assertThat(CUSTOM_CLASS_FIELD.getValue(), Is.is(1));
+		ConfigParser.parse(DefaultValueTest.class, "config/base.ini");
+		Assert.assertThat(DEFAULT_VALUE, Is.is(9999));
 	}
 }

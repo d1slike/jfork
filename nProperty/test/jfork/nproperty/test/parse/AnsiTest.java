@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -27,27 +27,21 @@ import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 
-public class OverridedPropertyNamesTest
+@Cfg
+public class AnsiTest
 {
-	@Cfg("myCustomInt")
-	private static int OVERRIDE_NAME_VALUE;
-
-	@Cfg("myCustomInt")
-	private static int OVERRIDE_NAME_VALUE2;
-
-	@Cfg(value = "myCustomSplitter", splitter = "-")
-	private static int[] OVERRIDE_SPLITTER_VALUE;
+	private static String ANSI_VALUE;
 
 	@Test
-	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(OverridedPropertyNamesTest.class, "config/base.ini");
-
-		Assert.assertThat(OVERRIDE_NAME_VALUE, Is.is(1));
-		Assert.assertThat(OVERRIDE_NAME_VALUE2, Is.is(1));
-		Assert.assertThat(OVERRIDE_SPLITTER_VALUE, Is.is(new int[]{1,2,3}));
+		ConfigParser.parse(AnsiTest.class, new InputStreamReader(new FileInputStream(new File("config/base_ansi.ini")), "cp1251"), "config/base_ansi.ini");
+		Assert.assertThat(ANSI_VALUE, Is.is("абвгдеё"));
 	}
 }

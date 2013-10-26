@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -27,27 +27,39 @@ import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 
-@Cfg(prefix = "db.")
-public class PrefixTest
+public class AnnotatedMethodsTest
 {
-	private static String user;
-	private static String pswd;
-	private static String host;
-	private static int port;
+	public static int TEST;
+	public static String TEST3;
+	public static boolean notAnnotatedMethodCalled = false;
+
+	@Cfg
+	public static void method(int value)
+	{
+		TEST = value;
+	}
+
+	@Cfg("method_3")
+	private static void method3(String value)
+	{
+		TEST3 = value;
+	}
+
+	public void notAnnotatedMethod()
+	{
+		notAnnotatedMethodCalled = true;
+	}
 
 	@Test
-	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(PrefixTest.class, "config/base.ini");
-		Assert.assertThat(user, Is.is("user"));
-		Assert.assertThat(pswd, Is.is("pswd"));
-		Assert.assertThat(host, Is.is("127.0.0.1"));
-		Assert.assertThat(port, Is.is(90));
+		ConfigParser.parse(AnnotatedMethodsTest.class, "config/base.ini");
+
+		Assert.assertThat(TEST, Is.is(1));
+		Assert.assertThat(TEST3, Is.is("3"));
+		Assert.assertThat(notAnnotatedMethodCalled, Is.is(false));
 	}
 }

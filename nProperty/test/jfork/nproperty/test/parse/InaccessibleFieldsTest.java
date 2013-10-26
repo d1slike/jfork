@@ -19,23 +19,29 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
+import org.hamcrest.core.Is;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 @Cfg
-public class FinalFieldTest
+public class InaccessibleFieldsTest
 {
-	private static final int MY_FINAL_INT_VALUE = 0;
+	protected static int MY_INT_VALUE;
+	private static int MY_INT_VALUE2;
 
-	@Test(expected = IllegalAccessException.class)
-	public void finalFieldTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	@Test
+	public void testInaccessible() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(FinalFieldTest.class, "config/base.ini");
+		ConfigParser.parse(InaccessibleFieldsTest.class, "config/base.ini");
+
+		Assert.assertThat(MY_INT_VALUE, Is.is(1));
+		Assert.assertThat(MY_INT_VALUE2, Is.is(1));
 	}
 }

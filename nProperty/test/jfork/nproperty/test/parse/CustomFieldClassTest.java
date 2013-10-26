@@ -19,63 +19,43 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
-import jfork.nproperty.IPropertyListener;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public class ObjectAndEventsTest implements IPropertyListener
+public class CustomFieldClassTest
 {
-	private boolean onStartCalled, onPropertyMissCalled, onDoneCalled, onInvalidPropertyCastCalled;
+	private static class MyFieldClass
+	{
+		private int value;
+
+		public MyFieldClass(String value)
+		{
+			this.value = Integer.valueOf(value);
+		}
+
+		public int getValue()
+		{
+			return value;
+		}
+	}
 
 	@Cfg
-	public int missedProperty;
-
-	@Cfg
-	public int INVALID_CAST;
-
-	@Override
-	public void onStart(String path)
-	{
-		Assert.assertThat(new File(path).equals(new File("config/base.ini")), Is.is(true));
-		onStartCalled = true;
-	}
-
-	@Override
-	public void onPropertyMiss(String name)
-	{
-		Assert.assertThat(name, Is.is("missedProperty"));
-		onPropertyMissCalled = true;
-	}
-
-	@Override
-	public void onDone(String path)
-	{
-		Assert.assertThat(new File(path).equals(new File("config/base.ini")), Is.is(true));
-		onDoneCalled = true;
-	}
-
-	@Override
-	public void onInvalidPropertyCast(String name, String value)
-	{
-		Assert.assertThat(name, Is.is("INVALID_CAST"));
-		Assert.assertThat(value, Is.is("a"));
-		onInvalidPropertyCastCalled = true;
-	}
+	private static MyFieldClass CUSTOM_CLASS_FIELD;
 
 	@Test
 	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(this, "config/base.ini");
-		Assert.assertThat(onStartCalled && onPropertyMissCalled && onDoneCalled && onInvalidPropertyCastCalled, Is.is(true));
+		ConfigParser.parse(CustomFieldClassTest.class, "config/base.ini");
 
+		Assert.assertThat(CUSTOM_CLASS_FIELD != null, Is.is(true));
+		Assert.assertThat(CUSTOM_CLASS_FIELD.getValue(), Is.is(1));
 	}
 }

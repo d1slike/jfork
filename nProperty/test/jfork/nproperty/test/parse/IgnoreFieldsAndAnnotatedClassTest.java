@@ -19,37 +19,32 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
 import org.hamcrest.core.Is;
+import org.hamcrest.core.IsNot;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 
 @Cfg
-public class StaticAnnotatedClassTest
+public class IgnoreFieldsAndAnnotatedClassTest
 {
 	private static int MY_INT_VALUE;
-	private static int MY_INT_DEFAULT_VALUE = 10;
-	private static int[] MY_SPLITTER_VALUE;
 
-	private static List<Integer> MY_SPLITTER_VALUE2 = new ArrayList<>();
+	@Cfg(ignore = true)
+	private static int MY_INT_VALUE2 = -1;
 
 	@Test
-	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void testIgnoredFields() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(StaticAnnotatedClassTest.class, "config/base.ini");
+		ConfigParser.parse(IgnoreFieldsAndAnnotatedClassTest.class, "config/base.ini");
+
 		Assert.assertThat(MY_INT_VALUE, Is.is(1));
-		Assert.assertThat(MY_INT_DEFAULT_VALUE, Is.is(10));
-		Assert.assertThat(MY_SPLITTER_VALUE, Is.is(new int[]{1,2,3}));
-		Assert.assertThat(MY_SPLITTER_VALUE2.get(0), Is.is(1));
-		Assert.assertThat(MY_SPLITTER_VALUE2.get(1), Is.is(2));
-		Assert.assertThat(MY_SPLITTER_VALUE2.get(2), Is.is(3));
+		Assert.assertThat(MY_INT_VALUE2, IsNot.not(1));
 	}
 }

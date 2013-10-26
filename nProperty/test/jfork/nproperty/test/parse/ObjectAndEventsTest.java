@@ -19,47 +19,63 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
+import jfork.nproperty.IPropertyListener;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public class AnnotatedMethodsTest
+public class ObjectAndEventsTest implements IPropertyListener
 {
-	public static int TEST;
-	public static String TEST3;
-	public static boolean notAnnotatedMethodCalled = false;
+	private boolean onStartCalled, onPropertyMissCalled, onDoneCalled, onInvalidPropertyCastCalled;
 
 	@Cfg
-	public static void method(int value)
+	public int missedProperty;
+
+	@Cfg
+	public int INVALID_CAST;
+
+	@Override
+	public void onStart(String path)
 	{
-		TEST = value;
+		Assert.assertThat(new File(path).equals(new File("config/base.ini")), Is.is(true));
+		onStartCalled = true;
 	}
 
-	@Cfg("method_3")
-	private static void method3(String value)
+	@Override
+	public void onPropertyMiss(String name)
 	{
-		TEST3 = value;
+		Assert.assertThat(name, Is.is("missedProperty"));
+		onPropertyMissCalled = true;
 	}
 
-	public void notAnnotatedMethod()
+	@Override
+	public void onDone(String path)
 	{
-		notAnnotatedMethodCalled = true;
+		Assert.assertThat(new File(path).equals(new File("config/base.ini")), Is.is(true));
+		onDoneCalled = true;
+	}
+
+	@Override
+	public void onInvalidPropertyCast(String name, String value)
+	{
+		Assert.assertThat(name, Is.is("INVALID_CAST"));
+		Assert.assertThat(value, Is.is("a"));
+		onInvalidPropertyCastCalled = true;
 	}
 
 	@Test
 	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(AnnotatedMethodsTest.class, "config/base.ini");
+		ConfigParser.parse(this, "config/base.ini");
+		Assert.assertThat(onStartCalled && onPropertyMissCalled && onDoneCalled && onInvalidPropertyCastCalled, Is.is(true));
 
-		Assert.assertThat(TEST, Is.is(1));
-		Assert.assertThat(TEST3, Is.is("3"));
-		Assert.assertThat(notAnnotatedMethodCalled, Is.is(false));
 	}
 }
