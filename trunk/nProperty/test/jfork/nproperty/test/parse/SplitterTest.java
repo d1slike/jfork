@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -52,6 +52,8 @@ public class SplitterTest
 	@Cfg("myCustomSingleSplitter2")
 	public static List<Integer> MY_SINGLE_LIST_SPLITTER2 = new ArrayList<>();
 
+	public static List<Integer> NOT_ANNOTATED_VALUE = new ArrayList<>();
+
 	@Test
 	public void testSplitter() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
@@ -72,5 +74,6 @@ public class SplitterTest
 
 		Assert.assertThat(MY_SINGLE_LIST_SPLITTER.get(0), Is.is(1));
 		Assert.assertThat(MY_SINGLE_LIST_SPLITTER2.get(0), Is.is(1));
+		Assert.assertThat(NOT_ANNOTATED_VALUE.size(), Is.is(0));
 	}
 }

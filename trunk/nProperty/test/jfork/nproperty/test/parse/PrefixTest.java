@@ -19,32 +19,32 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
 import org.hamcrest.core.Is;
-import org.hamcrest.core.IsNot;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-@Cfg
-public class IgnoreFieldsAndAnnotatedClassTest
+@Cfg(prefix = "db.")
+public class PrefixTest
 {
-	private static int MY_INT_VALUE;
-
-	@Cfg(ignore = true)
-	private static int MY_INT_VALUE2 = -1;
+	private static String user;
+	private static String pswd;
+	private static String host;
+	private static int port;
 
 	@Test
-	public void testIgnoredFields() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(IgnoreFieldsAndAnnotatedClassTest.class, "config/base.ini");
-
-		Assert.assertThat(MY_INT_VALUE, Is.is(1));
-		Assert.assertThat(MY_INT_VALUE2, IsNot.not(1));
+		ConfigParser.parse(PrefixTest.class, "config/base.ini");
+		Assert.assertThat(user, Is.is("user"));
+		Assert.assertThat(pswd, Is.is("pswd"));
+		Assert.assertThat(host, Is.is("127.0.0.1"));
+		Assert.assertThat(port, Is.is(90));
 	}
 }

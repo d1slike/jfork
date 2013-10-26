@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -30,18 +30,24 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-@Cfg
-public class InaccessibleFieldsTest
+public class OverridedPropertyNamesTest
 {
-	protected static int MY_INT_VALUE;
-	private static int MY_INT_VALUE2;
+	@Cfg("myCustomInt")
+	private static int OVERRIDE_NAME_VALUE;
+
+	@Cfg("myCustomInt")
+	private static int OVERRIDE_NAME_VALUE2;
+
+	@Cfg(value = "myCustomSplitter", splitter = "-")
+	private static int[] OVERRIDE_SPLITTER_VALUE;
 
 	@Test
-	public void testInaccessible() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(InaccessibleFieldsTest.class, "config/base.ini");
+		ConfigParser.parse(OverridedPropertyNamesTest.class, "config/base.ini");
 
-		Assert.assertThat(MY_INT_VALUE, Is.is(1));
-		Assert.assertThat(MY_INT_VALUE2, Is.is(1));
+		Assert.assertThat(OVERRIDE_NAME_VALUE, Is.is(1));
+		Assert.assertThat(OVERRIDE_NAME_VALUE2, Is.is(1));
+		Assert.assertThat(OVERRIDE_SPLITTER_VALUE, Is.is(new int[]{1,2,3}));
 	}
 }

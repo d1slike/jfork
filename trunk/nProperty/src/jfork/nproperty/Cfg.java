@@ -99,4 +99,11 @@ public @interface Cfg
 	 * </pre>
 	 */
 	String prefix() default "";
+
+	/**
+	 * Allows parametrization of properties.
+	 * Parametrization is pre-work of parser and it affects native string values from property file.
+	 * Property parameters is sequence: ${key}, where key is property name from configuration file.
+	 */
+	boolean parametrize() default false;
 }

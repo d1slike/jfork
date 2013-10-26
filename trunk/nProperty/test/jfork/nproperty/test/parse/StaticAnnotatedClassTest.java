@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -27,21 +27,29 @@ import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Cfg
-public class AnsiTest
+public class StaticAnnotatedClassTest
 {
-	private static String ANSI_VALUE;
+	private static int MY_INT_VALUE;
+	private static int MY_INT_DEFAULT_VALUE = 10;
+	private static int[] MY_SPLITTER_VALUE;
+
+	private static List<Integer> MY_SPLITTER_VALUE2 = new ArrayList<>();
 
 	@Test
 	public void staticClassTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(AnsiTest.class, new InputStreamReader(new FileInputStream(new File("config/base_ansi.ini")), "cp1251"), "config/base_ansi.ini");
-		Assert.assertThat(ANSI_VALUE, Is.is("абвгдеё"));
+		ConfigParser.parse(StaticAnnotatedClassTest.class, "config/base.ini");
+		Assert.assertThat(MY_INT_VALUE, Is.is(1));
+		Assert.assertThat(MY_INT_DEFAULT_VALUE, Is.is(10));
+		Assert.assertThat(MY_SPLITTER_VALUE, Is.is(new int[]{1,2,3}));
+		Assert.assertThat(MY_SPLITTER_VALUE2.get(0), Is.is(1));
+		Assert.assertThat(MY_SPLITTER_VALUE2.get(1), Is.is(2));
+		Assert.assertThat(MY_SPLITTER_VALUE2.get(2), Is.is(3));
 	}
 }

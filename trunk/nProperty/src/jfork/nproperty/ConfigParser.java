@@ -27,6 +27,8 @@ import jfork.typecaster.exception.IllegalTypeException;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Configuration parser parses given configuration file(s) and fills given object fields.
@@ -48,6 +50,8 @@ import java.util.*;
  */
 public class ConfigParser
 {
+	private final static Pattern parametersPattern = Pattern.compile("\\$\\{([^}]*)\\}");
+
 	/**
 	 * Parses property set with using of NProperty annotations and string path to property source.
 	 *
@@ -77,7 +81,14 @@ public class ConfigParser
 	 */
 	public static Properties parse(Object object, File file) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException
 	{
-		return parse(object, new FileInputStream(file), file.getPath());
+		Properties props;
+
+		try (FileInputStream stream = new FileInputStream(file))
+		{
+			props = parse(object, stream, file.getPath());
+		}
+
+		return props;
 	}
 
 	/**
@@ -142,19 +153,26 @@ public class ConfigParser
 		boolean isClass = (object instanceof Class);
 		boolean classAnnotationPresent;
 		String prefix = null;
+		boolean classAllowParameters = false;
 		if (isClass)
 		{
 			classAnnotationPresent = ((Class)object).isAnnotationPresent(Cfg.class);
 
 			if (classAnnotationPresent)
+			{
 				prefix = ((Cfg)((Class)object).getAnnotation(Cfg.class)).prefix();
+				classAllowParameters = ((Cfg)((Class)object).getAnnotation(Cfg.class)).parametrize();
+			}
 		}
 		else
 		{
 			classAnnotationPresent = object.getClass().isAnnotationPresent(Cfg.class);
 
 			if (classAnnotationPresent)
+			{
 				prefix = object.getClass().getAnnotation(Cfg.class).prefix();
+				classAllowParameters = object.getClass().getAnnotation(Cfg.class).parametrize();
+			}
 		}
 
 		Field[] fields = (object instanceof Class) ? ((Class) object).getDeclaredFields() : object.getClass().getDeclaredFields();
@@ -162,6 +180,7 @@ public class ConfigParser
 		{
 			// Find property name
 			String name;
+			boolean allowParameters = classAllowParameters;
 			if (isClass && !Modifier.isStatic(field.getModifiers()))
 				continue;
 
@@ -171,15 +190,18 @@ public class ConfigParser
 					continue;
 
 				name = field.getAnnotation(Cfg.class).value();
+
+				if (!allowParameters)
+					allowParameters = field.getAnnotation(Cfg.class).parametrize();
+
+				// If name is empty, we should try to take field name as property name
+				if (name.isEmpty())
+					name = field.getName();
 			}
 			else if (classAnnotationPresent)
 				name = field.getName();
 			else
 				continue;
-
-			// If name is empty, we should try to take field name as property name
-			if (name.length() <= 0)
-				name = field.getName();
 
 			// Adding prefix if needed
 			if (prefix != null && !prefix.isEmpty())
@@ -189,10 +211,91 @@ public class ConfigParser
 			field.setAccessible(true);
 			if (props.containsKey(name))
 			{
-				// Config & Cfg
-				if ((field.isAnnotationPresent(Cfg.class) || classAnnotationPresent) && (!field.getType().isArray() && !field.getType().isAssignableFrom(List.class)))
+				String propValue = props.getProperty(name);
+
+				if (allowParameters)
 				{
-					String propValue = getProperty(object, props, name);
+					// Check for parameters in property value
+					Matcher parametersMatcher = parametersPattern.matcher(propValue);
+					boolean replacePlaceholders = false;
+					while (parametersMatcher.find())
+					{
+						String parameterPropertyName = parametersMatcher.group(1);
+
+						if (!parameterPropertyName.isEmpty())
+						{
+							String parameterPropertyValue = props.containsKey(parameterPropertyName) ? props.getProperty(parameterPropertyName) : "";
+							propValue = propValue.replace(parametersMatcher.group(), parameterPropertyValue);
+						}
+						else if (!replacePlaceholders)
+						{
+							replacePlaceholders = true;
+						}
+					}
+
+					if (replacePlaceholders)
+					{
+						propValue = propValue.replace("${}", "$");
+					}
+				}
+
+				// Native arrays
+				if (field.getType().isArray())
+				{
+					Class baseType = field.getType().getComponentType();
+					if (propValue != null)
+					{
+						String[] values = propValue.split(field.isAnnotationPresent(Cfg.class) ? field.getAnnotation(Cfg.class).splitter() : ";");
+
+						Object array = Array.newInstance(baseType, values.length);
+						field.set(object, array);
+
+						int index = 0;
+						for (String value : values)
+						{
+							try
+							{
+								Array.set(array, index, TypeCaster.cast(baseType, value));
+							}
+							catch (IllegalTypeException | NumberFormatException e)
+							{
+								if (callEvents)
+									((IPropertyListener)object).onInvalidPropertyCast(name, value);
+							}
+							++index;
+						}
+
+						field.set(object, array);
+					}
+				}
+				// Lists
+				else if (field.getType().isAssignableFrom(List.class))
+				{
+					if (field.get(object) == null)
+						throw new NullPointerException("Cannot use null-object for parsing List splitter.");
+
+					Class genericType = (Class)((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
+					if (propValue != null)
+					{
+						String[] values = propValue.split(field.isAnnotationPresent(Cfg.class) ? field.getAnnotation(Cfg.class).splitter() : ";");
+
+						for (String value : values)
+						{
+							try
+							{
+								((List<Object>)field.get(object)).add(TypeCaster.cast(genericType, value));
+							}
+							catch (IllegalTypeException | NumberFormatException e)
+							{
+								if (callEvents)
+									((IPropertyListener)object).onInvalidPropertyCast(name, value);
+							}
+						}
+					}
+				}
+				// Primary & standard types
+				else
+				{
 					if (propValue != null)
 					{
 						// If it is known type - just cast it, else - create new instance of class is possible
@@ -208,6 +311,7 @@ public class ConfigParser
 									((IPropertyListener)object).onInvalidPropertyCast(name, propValue);
 							}
 						}
+						// Custom classes
 						else
 						{
 							Constructor construct = field.getType().getDeclaredConstructor(String.class);
@@ -215,68 +319,6 @@ public class ConfigParser
 							construct.setAccessible(true);
 							field.set(object, construct.newInstance(propValue));
 							construct.setAccessible(oldConstructAccess);
-						}
-					}
-				}
-				// Splitters
-				else if (field.getType().isArray() || field.getType().isAssignableFrom(List.class))
-				{
-					// Native arrays
-					if (field.getType().isArray())
-					{
-						Class baseType = field.getType().getComponentType();
-						String propValue = getProperty(object, props, name);
-						if (propValue != null)
-						{
-							String[] values = propValue.split(field.isAnnotationPresent(Cfg.class) ? field.getAnnotation(Cfg.class).splitter() : ";");
-
-							Object array = Array.newInstance(baseType, values.length);
-							field.set(object, array);
-
-							int index = 0;
-							for (String value : values)
-							{
-								try
-								{
-									Array.set(array, index, TypeCaster.cast(baseType, value));
-								}
-								catch (IllegalTypeException | NumberFormatException e)
-								{
-									if (callEvents)
-										((IPropertyListener)object).onInvalidPropertyCast(name, value);
-								}
-								++index;
-							}
-
-							field.set(object, array);
-						}
-					}
-					// Lists
-					else if (field.getType().isAssignableFrom(List.class))
-					{
-						if (field.get(object) == null)
-							throw new NullPointerException("Cannot use null-object for parsing List splitter.");
-
-						Class genericType = (Class)((ParameterizedType)field.getGenericType()).getActualTypeArguments()[0];
-						String propValue = getProperty(object, props, name);
-						if (propValue != null)
-						{
-							String[] values = propValue.split(field.isAnnotationPresent(Cfg.class) ? field.getAnnotation(Cfg.class).splitter() : ";");
-
-							Method add = field.getType().getDeclaredMethod("add", Object.class);
-
-							for (String value : values)
-							{
-								try
-								{
-									add.invoke(field.get(object), TypeCaster.cast(genericType, value));
-								}
-								catch (IllegalTypeException | NumberFormatException e)
-								{
-									if (callEvents)
-										((IPropertyListener)object).onInvalidPropertyCast(name, value);
-								}
-							}
 						}
 					}
 				}
@@ -296,21 +338,13 @@ public class ConfigParser
 		for (Method method : methods)
 		{
 			// Accumulate annotation info
-			boolean annotated = true;
-			String propName = null;
-
 			if (method.isAnnotationPresent(Cfg.class))
 			{
-				propName = method.getAnnotation(Cfg.class).value();
-			}
-			else
-				annotated = false;
+				String propName = method.getAnnotation(Cfg.class).value();
 
-			if (propName == null || propName.length() <= 0)
-				propName = method.getName();
+				if (propName.isEmpty())
+					propName = method.getName();
 
-			if (annotated)
-			{
 				if (!props.containsKey(propName))
 				{
 					if (object instanceof IPropertyListener)
@@ -322,7 +356,7 @@ public class ConfigParser
 
 				if (method.getParameterTypes().length == 1)
 				{
-					String propValue = getProperty(object, props, propName);
+					String propValue = props.getProperty(propName);
 					boolean oldAccess = method.isAccessible();
 					method.setAccessible(true);
 
@@ -353,14 +387,167 @@ public class ConfigParser
 	}
 
 	/**
-	 * Gets property from property file.
+	 * Stores configuration fields to file with given path.
 	 *
-	 * @param properties Current properties object.
-	 * @param name Property key value.
-	 * @return Property value is it exists, else - null.
+	 * @param object Object to get fields from.
+	 * @param path Path to file write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
 	 */
-	private static String getProperty(Object object, Properties properties, String name)
+	public static void store(Object object, String path) throws IOException, IllegalAccessException
 	{
-		return properties.getProperty(name);
+		store(object, new File(path));
+	}
+
+	/**
+	 * Stores configuration fields to given file.
+	 *
+	 * @param object Object to get fields from.
+	 * @param file File descriptor to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void store(Object object, File file) throws IOException, IllegalAccessException
+	{
+		try (OutputStream stream = new FileOutputStream(file))
+		{
+			store(object, stream);
+		}
+	}
+
+	/**
+	 * Stores configuration fields to stream.
+	 *
+	 * @param object Object to get fields from.
+	 * @param stream Output stream to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void store(Object object, OutputStream stream) throws IOException, IllegalAccessException
+	{
+		stream.write(store0(object).getBytes());
+	}
+
+	/**
+	 * Stores configuration fields to stream.
+	 *
+	 * @param object Object to get fields from.
+	 * @param writer Writer interface to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void store(Object object, Writer writer) throws IOException, IllegalAccessException
+	{
+		writer.write(store0(object));
+	}
+
+	/**
+	 * Stores configuration fields to stream.
+	 *
+	 * @param object Object to get fields from.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	private static String store0(Object object) throws IOException, IllegalAccessException
+	{
+		String lineSeparator = System.getProperty("line.separator");
+		boolean isClass = (object instanceof Class);
+		boolean classAnnotationPresent;
+		String prefix = null;
+		if (isClass)
+		{
+			classAnnotationPresent = ((Class)object).isAnnotationPresent(Cfg.class);
+
+			if (classAnnotationPresent)
+			{
+				prefix = ((Cfg)((Class)object).getAnnotation(Cfg.class)).prefix();
+			}
+		}
+		else
+		{
+			classAnnotationPresent = object.getClass().isAnnotationPresent(Cfg.class);
+
+			if (classAnnotationPresent)
+			{
+				prefix = object.getClass().getAnnotation(Cfg.class).prefix();
+			}
+		}
+
+		StringBuilder builder = new StringBuilder();
+
+		boolean isFirstField = true;
+		Field[] fields = (object instanceof Class) ? ((Class) object).getDeclaredFields() : object.getClass().getDeclaredFields();
+		for (Field field : fields)
+		{
+			// Find property name
+			String name;
+			String splitter = ";";
+			if (isClass && !Modifier.isStatic(field.getModifiers()))
+				continue;
+
+			if (field.isAnnotationPresent(Cfg.class))
+			{
+				if (field.getAnnotation(Cfg.class).ignore())
+					continue;
+
+				name = field.getAnnotation(Cfg.class).value();
+				splitter = field.getAnnotation(Cfg.class).splitter();
+
+				// If name is empty, we should try to take field name as property name
+				if (name.isEmpty())
+					name = field.getName();
+			}
+			else if (classAnnotationPresent)
+				name = field.getName();
+			else
+				continue;
+
+			// Adding prefix if needed
+			if (prefix != null && !prefix.isEmpty())
+				name = prefix.concat(name);
+
+			boolean oldAccess = field.isAccessible();
+			field.setAccessible(true);
+
+			Object fieldValue = field.get(object);
+
+			if (isFirstField)
+				isFirstField = false;
+			else
+				builder.append(lineSeparator).append(lineSeparator);
+
+			builder.append(name).append(" = ");
+
+			if (fieldValue != null && field.getType().isArray())
+			{
+				for (int i = 0, j = Array.getLength(fieldValue); i < j; ++i)
+				{
+					builder.append(Array.get(fieldValue, i));
+					if (i < j - 1)
+						builder.append(splitter);
+				}
+			}
+			else if (fieldValue != null && field.getType().isAssignableFrom(List.class))
+			{
+				boolean isFirst = true;
+				for (Object val : (List<?>)fieldValue)
+				{
+					if (isFirst)
+						isFirst = false;
+					else
+						builder.append(splitter);
+
+					builder.append(val);
+				}
+			}
+			else
+			{
+				builder.append(String.valueOf(fieldValue));
+			}
+
+			field.setAccessible(oldAccess);
+		}
+
+		return builder.toString();
 	}
 }

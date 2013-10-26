@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
@@ -30,15 +30,21 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-@Cfg
-public class DefaultValueTest
+public class AnnotatedFieldsTest
 {
-	private static int DEFAULT_VALUE = 9999;
+	@Cfg
+	private static Integer MY_INT_VALUE = 1;
+	@Cfg
+	private static int MY_INT_VALUE2;
+	private static int MY_NOT_ANNOTATED_VALUE = -1;
 
 	@Test
-	public void test() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	public void annotatedFieldTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(DefaultValueTest.class, "config/base.ini");
-		Assert.assertThat(DEFAULT_VALUE, Is.is(9999));
+		ConfigParser.parse(AnnotatedFieldsTest.class, "config/base.ini");
+
+		Assert.assertThat(MY_INT_VALUE, Is.is(1));
+		Assert.assertThat(MY_INT_VALUE2, Is.is(1));
+		Assert.assertThat(MY_NOT_ANNOTATED_VALUE, Is.is(-1));
 	}
 }

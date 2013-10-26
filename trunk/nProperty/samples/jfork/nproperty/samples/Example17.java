@@ -28,22 +28,31 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
- * Example of usage prefixes with nProperty.
+ * Example of usage parameter with nProperty.
  * You should set working directory to "{your_source_root}samples/" for proper read of configuration file "example.ini".
  *
  * @author Nikita Sankov
  */
 @Cfg(prefix = "db.")
-public class Example16
+public class Example17
 {
 	private static String user;
 	private static String pswd;
 	private static String host;
 	private static int port;
 
+	@Cfg(parametrize = true)
+	private static String sqlink;
+
+	@Cfg(parametrize = true)
+	private static String pswd2;
+
+	@Cfg(parametrize = true, splitter = ",")
+	private static int[] magics;
+
 	public static void main(String[] args) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(Example16.class, "config/example.ini");
+		ConfigParser.parse(Example17.class, "config/example.ini");
 	}
 }
 

@@ -19,32 +19,23 @@
  * under the License.
  */
 
-package jfork.nproperty.test;
+package jfork.nproperty.test.parse;
 
 import jfork.nproperty.Cfg;
 import jfork.nproperty.ConfigParser;
-import org.hamcrest.core.Is;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-public class AnnotatedFieldsTest
+@Cfg
+public class FinalFieldTest
 {
-	@Cfg
-	private static Integer MY_INT_VALUE = 1;
-	@Cfg
-	private static int MY_INT_VALUE2;
-	private static int MY_NOT_ANNOTATED_VALUE = -1;
+	private static final int MY_FINAL_INT_VALUE = 0;
 
-	@Test
-	public void annotatedFieldTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
+	@Test(expected = IllegalAccessException.class)
+	public void finalFieldTest() throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
-		ConfigParser.parse(AnnotatedFieldsTest.class, "config/base.ini");
-
-		Assert.assertThat(MY_INT_VALUE, Is.is(1));
-		Assert.assertThat(MY_INT_VALUE2, Is.is(1));
-		Assert.assertThat(MY_NOT_ANNOTATED_VALUE, Is.is(-1));
+		ConfigParser.parse(FinalFieldTest.class, "config/base.ini");
 	}
 }
