@@ -40,6 +40,7 @@ public class TypeCasterTest
 	private final static Class[] _allowedTypes = {
 			Integer.class, int.class,
 			Short.class, short.class,
+			Float.class, float.class,
 			Double.class, double.class,
 			Long.class, long.class,
 			Boolean.class, boolean.class,
@@ -54,6 +55,7 @@ public class TypeCasterTest
 	private final static Object[] _allowedObjects = {
 			new Integer(1), (int)1,
 			new Short((short)1), (short)1,
+			new Float(1.), (float)1.,
 			new Double(1.0), (double)1.0,
 			new Long(1), (long)1,
 			new Boolean(false), (boolean)true,
@@ -73,6 +75,10 @@ public class TypeCasterTest
 	private int intField;
 	@FieldTypeCasterTest
 	private Short shortField;
+	@FieldTypeCasterTest
+	private Float floatField;
+	@FieldTypeCasterTest
+	private float fltField;
 	@FieldTypeCasterTest
 	private short shrField;
 	@FieldTypeCasterTest
@@ -149,6 +155,9 @@ public class TypeCasterTest
 		Assert.assertThat(TypeCaster.cast(Integer.class, "1"), Is.is(1));
 		Assert.assertThat(TypeCaster.cast(int.class, "1"), Is.is(1));
 		Assert.assertThat(TypeCaster.cast(Short.class, "1"), Is.is((short)1));
+		Assert.assertThat(TypeCaster.cast(short.class, "1"), Is.is((short)1));
+		Assert.assertThat(TypeCaster.cast(Float.class, "1"), Is.is(1f));
+		Assert.assertThat(TypeCaster.cast(float.class, "1"), Is.is(1f));
 		Assert.assertThat(TypeCaster.cast(Double.class, "1."), Is.is(1.));
 		Assert.assertThat(TypeCaster.cast(double.class, "1."), Is.is(1.));
 		Assert.assertThat(TypeCaster.cast(Long.class, "1"), Is.is(1L));
@@ -209,6 +218,12 @@ public class TypeCasterTest
 
 		TypeCaster.cast(this, getClass().getDeclaredField("shrField"), "1");
 		Assert.assertThat(shrField, Is.is((short)1));
+
+		TypeCaster.cast(this, getClass().getDeclaredField("floatField"), "1");
+		Assert.assertThat(floatField, Is.is(1f));
+
+		TypeCaster.cast(this, getClass().getDeclaredField("fltField"), "1");
+		Assert.assertThat(fltField, Is.is(1f));
 
 		TypeCaster.cast(this, getClass().getDeclaredField("doubleField"), "1.0");
 		Assert.assertThat(doubleField, Is.is((double)1));

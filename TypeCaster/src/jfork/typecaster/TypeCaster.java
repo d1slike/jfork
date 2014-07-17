@@ -38,6 +38,7 @@ public class TypeCaster
 	private final static Class[] _allowedTypes = {
 			Integer.class, int.class,
 			Short.class, short.class,
+			Float.class, float.class, // PointerRage -- support float types
 			Double.class, double.class,
 			Long.class, long.class,
 			Boolean.class, boolean.class,
@@ -71,6 +72,8 @@ public class TypeCaster
 			field.set(object, Integer.decode(value));
 		else if (type == Short.class || type == short.class)
 			field.set(object, Short.decode(value));
+		else if (type == Float.class || type == float.class) // PointerRage -- support float types
+			field.set(object, Float.parseFloat(value));
 		else if (type == Double.class || type == double.class)
 			field.set(object, Double.parseDouble(value));
 		else if (type == Long.class || type == long.class)
@@ -120,6 +123,8 @@ public class TypeCaster
 			return (T)Integer.class.cast(Integer.decode(value));
 		else if (type == Short.class || type == short.class)
 			return (T)Short.class.cast(Short.decode(value));
+		else if (type == Float.class || type == float.class) // PointerRage -- support float types
+			return (T)Float.class.cast(Float.parseFloat(value));
 		else if (type == Double.class || type == double.class)
 			return (T)Double.class.cast(Double.parseDouble(value));
 		else if (type == Long.class || type == long.class)
