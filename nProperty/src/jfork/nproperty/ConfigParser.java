@@ -215,22 +215,31 @@ public class ConfigParser
 
 				if (allowParameters)
 				{
-					// Check for parameters in property value
-					Matcher parametersMatcher = parametersPattern.matcher(propValue);
 					boolean replacePlaceholders = false;
-					while (parametersMatcher.find())
+					while (true)
 					{
-						String parameterPropertyName = parametersMatcher.group(1);
+						// Check for parameters in property value
+						Matcher parametersMatcher = parametersPattern.matcher(propValue);
+						boolean exit = true;
+						while (parametersMatcher.find())
+						{
+							String parameterPropertyName = parametersMatcher.group(1);
 
-						if (!parameterPropertyName.isEmpty())
-						{
-							String parameterPropertyValue = props.containsKey(parameterPropertyName) ? props.getProperty(parameterPropertyName) : "";
-							propValue = propValue.replace(parametersMatcher.group(), parameterPropertyValue);
+							if (!parameterPropertyName.isEmpty())
+							{
+								exit = false;
+
+								String parameterPropertyValue = props.containsKey(parameterPropertyName) ? props.getProperty(parameterPropertyName) : "";
+								propValue = propValue.replace(parametersMatcher.group(), parameterPropertyValue);
+							}
+							else if (!replacePlaceholders)
+							{
+								replacePlaceholders = true;
+							}
 						}
-						else if (!replacePlaceholders)
-						{
-							replacePlaceholders = true;
-						}
+
+						if (exit)
+							break;
 					}
 
 					if (replacePlaceholders)

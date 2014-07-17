@@ -68,6 +68,9 @@ public class ParametersTest
 		@Cfg(parametrize = true, splitter = ",")
 		private static int[] PARAMETRIZED_PROPERTY;
 
+		@Cfg(parametrize = true, splitter = ",")
+		private static int[] RECURSIVE_PARAMETER_PROPERTY;
+
 		@Cfg(parametrize = true)
 		private static String PLACEHOLDER_PROPERTY;
 
@@ -82,6 +85,8 @@ public class ParametersTest
 		Assert.assertThat(FieldParameterrizeTest.PARAMETRIZED_PROPERTY.length, Is.is(2));
 		Assert.assertThat(FieldParameterrizeTest.PARAMETRIZED_PROPERTY[0], Is.is(FieldParameterrizeTest.PARAMETER_VALUE));
 		Assert.assertThat(FieldParameterrizeTest.PARAMETRIZED_PROPERTY[1], Is.is(2));
+		Assert.assertThat(FieldParameterrizeTest.RECURSIVE_PARAMETER_PROPERTY[0], Is.is(FieldParameterrizeTest.PARAMETRIZED_PROPERTY[0]));
+		Assert.assertThat(FieldParameterrizeTest.RECURSIVE_PARAMETER_PROPERTY[1], Is.is(FieldParameterrizeTest.PARAMETRIZED_PROPERTY[1]));
 		Assert.assertThat(FieldParameterrizeTest.PLACEHOLDER_PROPERTY, Is.is("${PARAMETER_VALUE}"));
 		Assert.assertThat(FieldParameterrizeTest.NO_EXIST_PROPERTY, Is.is("${no_exist}"));
 	}
