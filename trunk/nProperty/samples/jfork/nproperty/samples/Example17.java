@@ -50,9 +50,17 @@ public class Example17
 	@Cfg(parametrize = true, splitter = ",")
 	private static int[] magics;
 
+	@Cfg(parametrize = true)
+	private static String prop1;
+	@Cfg(parametrize = true)
+	private static String prop2;
+	@Cfg(parametrize = true)
+	private static String prop3;
+
 	public static void main(String[] args) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IOException, InvocationTargetException
 	{
 		ConfigParser.parse(Example17.class, "config/example.ini");
+		System.out.println(prop3);
 	}
 }
 
