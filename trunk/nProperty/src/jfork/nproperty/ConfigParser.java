@@ -69,6 +69,23 @@ public class ConfigParser
 	}
 
 	/**
+	 * Parses XML property set with using of nProperty annotations and string path to property XML source.
+	 * Author - PointerRage.
+	 *
+	 * @param object NProperty annotated object, that represents Java property storage.
+	 * @param path Path to properties file.
+	 * @throws InvocationTargetException Failed invoke some annotated method.
+	 * @throws NoSuchMethodException Appears on adding splitter properties to lists.
+	 * @throws InstantiationException When failed to create instance of an custom object. Such exception can appered when property field is of custom type.
+	 * @throws IllegalAccessException If NProperty tries access inaccessible entities in annotated object.
+	 * @throws IOException If configuration file does not exists or due to system IO errors.
+	 */
+	public static Properties parseXml(Object object, String path) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException
+	{
+		return parseXml(object, new File(path));
+	}
+
+	/**
 	 * Parses property set with using of NProperty annotations and File object referenced to property source.
 	 *
 	 * @param object NProperty annotated object, that represents Java property storage.
@@ -92,6 +109,30 @@ public class ConfigParser
 	}
 
 	/**
+	 * Parses XML property set with using of nProperty annotations and XML File object referenced to property source.
+	 * Author - PointerRage.
+	 *
+	 * @param object nProperty annotated object, that represents Java property storage.
+	 * @param file File to read properties from.
+	 * @throws InvocationTargetException Failed invoke some annotated method.
+	 * @throws NoSuchMethodException Appears on adding splitter properties to lists.
+	 * @throws InstantiationException When failed to create instance of an custom object. Such exception can appered when property field is of custom type.
+	 * @throws IllegalAccessException If NProperty tries access inaccessible entities in annotated object.
+	 * @throws IOException If configuration file does not exists or due to system IO errors.
+	 */
+	public static Properties parseXml(Object object, File file) throws IOException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException
+	{
+		Properties props;
+
+		try (FileInputStream stream = new FileInputStream(file))
+		{
+			props = parseXml(object, stream, file.getPath());
+		}
+
+		return props;
+	}
+
+	/**
 	 * Parses property set with using of NProperty annotations and using abstract input io stream (it can be a file, network or any other thing Java can provide within io streams).
 	 *
 	 * @param object NProperty annotated object, that represents Java property storage.
@@ -107,6 +148,27 @@ public class ConfigParser
 	{
 		Properties props = new Properties();
 		props.load(stream);
+
+		return parse0(object, props, streamName);
+	}
+
+	/**
+	 * Parses XML property set with using of nProperty annotations and using abstract input XML io stream (it can be a file, network or any other thing Java can provide within io streams).
+	 * Author - PointerRage.
+	 *
+	 * @param object nProperty annotated object, that represents Java property storage.
+	 * @param stream IO stream from properties will be read.
+	 * @param streamName Name of stream (this will be used instead of file name, because of using IO stream we cannot retrieve file name).
+	 * @throws InvocationTargetException Failed invoke some annotated method.
+	 * @throws NoSuchMethodException Appears on adding splitter properties to lists.
+	 * @throws InstantiationException When failed to create instance of an custom object. Such exception can appered when property field is of custom type.
+	 * @throws IllegalAccessException If NProperty tries access inaccessible entities in annotated object.
+	 * @throws IOException If configuration file does not exists or due to system IO errors.
+	 */
+	public static Properties parseXml(Object object, InputStream stream, String streamName) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, IOException
+	{
+		Properties props = new Properties();
+		props.loadFromXML(stream);
 
 		return parse0(object, props, streamName);
 	}
@@ -409,6 +471,20 @@ public class ConfigParser
 	}
 
 	/**
+	 * Stores configuration fields in XML format to file with given path.
+	 * Author - PointerRage.
+	 *
+	 * @param object Object to get fields from.
+	 * @param path Path to file write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void storeXml(Object object, String path) throws IOException, IllegalAccessException
+	{
+		storeXml(object, new File(path));
+	}
+
+	/**
 	 * Stores configuration fields to given file.
 	 *
 	 * @param object Object to get fields from.
@@ -425,6 +501,23 @@ public class ConfigParser
 	}
 
 	/**
+	 * Stores configuration fields in XML format to given file.
+	 * Author - PointerRage.
+	 *
+	 * @param object Object to get fields from.
+	 * @param file File descriptor to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void storeXml(Object object, File file) throws IOException, IllegalAccessException
+	{
+		try (OutputStream stream = new FileOutputStream(file))
+		{
+			storeXml(object, stream);
+		}
+	}
+
+	/**
 	 * Stores configuration fields to stream.
 	 *
 	 * @param object Object to get fields from.
@@ -434,7 +527,25 @@ public class ConfigParser
 	 */
 	public static void store(Object object, OutputStream stream) throws IOException, IllegalAccessException
 	{
-		stream.write(store0(object).getBytes());
+		ConfigStoreFormatterIni formatter = new ConfigStoreFormatterIni();
+		store0(object, formatter);
+		stream.write(formatter.generate().getBytes());
+	}
+
+	/**
+	 * Stores configuration fields to stream in XML format.
+	 * Author - PointerRage.
+	 *
+	 * @param object Object to get fields from.
+	 * @param stream Output stream to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void storeXml(Object object, OutputStream stream) throws IOException, IllegalAccessException
+	{
+		ConfigStoreFormatterXml formatter = new ConfigStoreFormatterXml();
+		store0(object, formatter);
+		stream.write(formatter.generate().getBytes());
 	}
 
 	/**
@@ -447,7 +558,24 @@ public class ConfigParser
 	 */
 	public static void store(Object object, Writer writer) throws IOException, IllegalAccessException
 	{
-		writer.write(store0(object));
+		ConfigStoreFormatterIni formatter = new ConfigStoreFormatterIni();
+		store0(object, formatter);
+		writer.write(formatter.generate());
+	}
+
+	/**
+	 * Stores configuration fields to stream in XML format.
+	 *
+	 * @param object Object to get fields from.
+	 * @param writer Writer interface to write to.
+	 * @throws IOException If any I/O error occurs.
+	 * @throws IllegalAccessException When failed to access objects' data.
+	 */
+	public static void storeXml(Object object, Writer writer) throws IOException, IllegalAccessException
+	{
+		ConfigStoreFormatterXml formatter = new ConfigStoreFormatterXml();
+		store0(object, formatter);
+		writer.write(formatter.generate());
 	}
 
 	/**
@@ -457,9 +585,8 @@ public class ConfigParser
 	 * @throws IOException If any I/O error occurs.
 	 * @throws IllegalAccessException When failed to access objects' data.
 	 */
-	private static String store0(Object object) throws IOException, IllegalAccessException
+	private static void store0(Object object, IConfigStoreFormatter formatter) throws IOException, IllegalAccessException
 	{
-		String lineSeparator = System.getProperty("line.separator");
 		boolean isClass = (object instanceof Class);
 		boolean classAnnotationPresent;
 		String prefix = null;
@@ -482,14 +609,11 @@ public class ConfigParser
 			}
 		}
 
-		StringBuilder builder = new StringBuilder();
-
-		boolean isFirstField = true;
 		Field[] fields = (object instanceof Class) ? ((Class) object).getDeclaredFields() : object.getClass().getDeclaredFields();
 		for (Field field : fields)
 		{
 			// Find property name
-			String name;
+			String name, value;
 			String splitter = ";";
 			if (isClass && !Modifier.isStatic(field.getModifiers()))
 				continue;
@@ -520,24 +644,20 @@ public class ConfigParser
 
 			Object fieldValue = field.get(object);
 
-			if (isFirstField)
-				isFirstField = false;
-			else
-				builder.append(lineSeparator).append(lineSeparator);
-
-			builder.append(name).append(" = ");
-
 			if (fieldValue != null && field.getType().isArray())
 			{
+				StringBuilder builder = new StringBuilder();
 				for (int i = 0, j = Array.getLength(fieldValue); i < j; ++i)
 				{
 					builder.append(Array.get(fieldValue, i));
 					if (i < j - 1)
 						builder.append(splitter);
 				}
+				value = builder.toString();
 			}
 			else if (fieldValue != null && field.getType().isAssignableFrom(List.class))
 			{
+				StringBuilder builder = new StringBuilder();
 				boolean isFirst = true;
 				for (Object val : (List<?>)fieldValue)
 				{
@@ -548,15 +668,15 @@ public class ConfigParser
 
 					builder.append(val);
 				}
+				value = builder.toString();
 			}
 			else
 			{
-				builder.append(String.valueOf(fieldValue));
+				value = String.valueOf(fieldValue);
 			}
 
+			formatter.addPair(name, value);
 			field.setAccessible(oldAccess);
 		}
-
-		return builder.toString();
 	}
 }

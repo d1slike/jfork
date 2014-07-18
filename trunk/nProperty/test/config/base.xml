@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<!-- # Test properties file. -->
+	<entry key="MY_INT_VALUE">1</entry>
+
+	<entry key="MY_INT_VALUE2">1</entry>
+
+	<entry key="MY_NOT_ANNOTATED_VALUE">1</entry>
+
+	<entry key="MY_FINAL_INT_VALUE">1</entry>
+
+	<entry key="MY_SPLITTER_VALUE">1;2;3</entry>
+	<entry key="MY_SPLITTER_VALUE2">1;2;3</entry>
+
+	<entry key="MY_CUSTOM_SPLITTER_VALUE">1-2-3</entry>
+
+	<entry key="myCustomInt">1</entry>
+
+	<entry key="myCustomSplitter">1-2-3</entry>
+
+	<entry key="myCustomSingleSplitter">1</entry>
+	<entry key="myCustomSingleSplitter2">1;</entry>
+
+	<entry key="CUSTOM_CLASS_FIELD">1</entry>
+
+	<entry key="NOT_ANNOTATED_VALUE">1;2;3</entry>
+
+	<entry key="nullList">0</entry>
+
+	<entry key="method">1</entry>
+	<entry key="method_3">3</entry>
+
+	<entry key="INVALID_CAST">a</entry>
+
+	<entry key="db.user">user</entry>
+	<entry key="db.pswd">pswd</entry>
+	<entry key="db.host">127.0.0.1</entry>
+	<entry key="db.port">90</entry>
+
+	<entry key="PARAMETER_VALUE">1</entry>
+
+	<entry key="PARAMETRIZED_PROPERTY">${PARAMETER_VALUE},2</entry>
+
+	<entry key="RECURSIVE_PARAMETER_PROPERTY">${PARAMETRIZED_PROPERTY}</entry>
+
+	<entry key="PLACEHOLDER_PROPERTY">${}{PARAMETER_VALUE}</entry>
+
+	<entry key="NON_REPLACIBLE_PROPERTY">$test${test</entry>
+
+	<entry key="NO_EXIST_PROPERTY">${no_exist}</entry>
+
+	<entry key="MULTIPLE_PARAMETERS_PROPERTY">sql://${db.user}@${db.host}:${db.port}</entry>
+</properties>

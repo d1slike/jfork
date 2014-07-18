@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="SOME_BT_VALUE">1</entry>
+<entry key="SOME_CHAR_VALUE">c</entry>
+<entry key="SOME_SRT_VALUE">2</entry>
+<entry key="SOME_INT_VALUE">3</entry>
+<entry key="SOME_LNG_VALUE">4</entry>
+<entry key="SOME_BOOL_VALUE">true</entry>
+<entry key="SOME_STRING_VALUE">string</entry>
+<entry key="SOME_BYTE_VALUE">5</entry>
+<entry key="SOME_CHARACTER_VALUE">c</entry>
+<entry key="SOME_SHORT_VALUE">6</entry>
+<entry key="SOME_INTEGER_VALUE">7</entry>
+<entry key="SOME_LONG_VALUE">8</entry>
+<entry key="SOME_BOOLEAN_VALUE">true</entry>
+<entry key="SOME_ATOMIC_INT_VALUE">9</entry>
+<entry key="SOME_ATOMIC_LONG_VALUE">10</entry>
+<entry key="SOME_BIGINT_VALUE">888</entry>
+<entry key="SOME_BIGDEC_VALUE">999</entry>
+<entry key="SOME_INT_ARRAY">1,2,3</entry>
+<entry key="SOME_INTEGER_ARRAY">4;5;6</entry>
+<entry key="SOME_LONG_LIST">7!8!9</entry>
+</properties>
